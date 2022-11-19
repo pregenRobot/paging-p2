@@ -27,6 +27,8 @@ void main() {
 	char *buffer = malloc(length+1);
 
 	store_data(table, store, text, 0, length);
+	printf("\n");
+	print_table(table);
 	read_data(table, store, buffer, 0, length);
 	printf("%s\n", buffer);
 
@@ -38,6 +40,8 @@ void main() {
 	buffer = malloc(length+1);
 
 	store_data(table, store, text2, 0, length);
+	print_table(table);
+
 	read_data(table, store, buffer, 0, length);
 	printf("%s\n", buffer);
 

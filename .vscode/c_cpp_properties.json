@@ -3,10 +3,7 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
-                "/usr/include/glib-2.0",
-                "/usr/lib64/glib-2.0/include",
-                "/usr/include/sysprof-4"
+                "${workspaceFolder}/**"
             ],
             "defines": [],
             "compilerPath": "/usr/lib64/ccache/gcc",
@@ -15,12 +12,13 @@
             "intelliSenseMode": "linux-gcc-x64",
             "compilerArgs": [
                 "-std=c99",
+                "-g",
                 "-o",
                 "test",
                 "paging.c",
-                "test.c",
-                "`pkg-config --cflags --libs glib-2.0`"
-            ]
+                "test.c"
+            ],
+            "configurationProvider": "ms-vscode.makefile-tools"
         }
     ],
     "version": 4
