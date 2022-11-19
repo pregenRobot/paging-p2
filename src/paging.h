@@ -6,11 +6,12 @@
 #include <stdbool.h>
 
 // You may find defining the following macros useful. Edit the values below to match your report
-#define PAGETABLE_ROWS	1<<9
-#define PAGETABLE_SIZE	sizeof(uint16_t)*PAGETABLE_ROWS
+
 #define OFFSET_BITS 	7
+#define OFFSET_MASK     (1<<OFFSET_BITS)-1 // 0000000001111111
+#define PAGETABLE_ROWS	1<<(16-OFFSET_BITS)
+#define PAGETABLE_SIZE	(16 - OFFSET_BITS) +3
 #define FRAME_BITS 	1<<OFFSET_BITS
-#define OFFSET_MASK     0x7f // 0000000001111111
 
 /**
  * Initialise the page table. This should allocate the memory for the page table and return the pointer.

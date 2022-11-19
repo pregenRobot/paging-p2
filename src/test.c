@@ -17,7 +17,7 @@ void main() {
 	map_page_to_frame(table, 2, 0, false, false);
 	map_page_to_frame(table, 3, 2, false, false);
 	map_page_to_frame(table, 4, 1, false, false);
-	print_table(table);
+	//print_table(table);
 
 	// Now try to write something to our store. Our implementation should transparently use the
 	// page table to store the virtual pages into correct physical frames. This example should fit
@@ -28,7 +28,7 @@ void main() {
 
 	store_data(table, store, text, 0, length);
 	printf("\n");
-	print_table(table);
+	// print_table(table);
 	read_data(table, store, buffer, 0, length);
 	printf("%s\n", buffer);
 
@@ -40,7 +40,7 @@ void main() {
 	buffer = malloc(length+1);
 
 	store_data(table, store, text2, 0, length);
-	print_table(table);
+	// print_table(table);
 
 	read_data(table, store, buffer, 0, length);
 	printf("%s\n", buffer);
