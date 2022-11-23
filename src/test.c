@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 
-void main() {
+int main() {
 
 	// Allocate 32 KiB of memory to serve as our store
 	void *store = malloc(1<<15);

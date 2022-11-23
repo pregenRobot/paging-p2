@@ -76,7 +76,7 @@ void print_table(void* table) {
 	uint16_t* pt = (uint16_t*) table;
 
 	for(int i = 0; i < PAGETABLE_ROWS; i++){
-		char* pt_row = int_to_bytes(pt[i],13);
+		char* pt_row = int_to_bytes(pt[i],12);
 		printf("%d : %s \n", i, pt_row);
 		free(pt_row);
 	}
@@ -85,7 +85,7 @@ void print_table(void* table) {
 void unmap_page(void* table, uint16_t page_number) {
 
 	uint16_t* pt = (uint16_t*) table;
-	pt[page_number]&=0b10;
+	pt[page_number]-=1;
 
 }
 

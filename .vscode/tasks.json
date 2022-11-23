@@ -6,7 +6,7 @@
         {
             "label": "C build",
             "type": "cppbuild",
-            "command": "/usr/lib64/ccache/gcc",
+            "command": "gcc",
             "args":[
                 "-std=c99",
                 "-g",
@@ -23,7 +23,29 @@
                 "kind": "build",
                 "isDefault": false
             },
-            "detail": "compiler: /usr/lib64/ccache/gcc"
+            "detail": "compiler: gcc"
+        },
+        {
+            "label": "C build Inverted",
+            "type": "cppbuild",
+            "command": "gcc",
+            "args":[
+                "-std=c99",
+                "-g",
+                "-o",
+                "test_inverted",
+                "inverted_paging.c",
+                "inverted_test.c",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/src/"
+            },
+            "problemMatcher": ["$gcc"],
+            "group":{
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "compiler: gcc"
         }
     ]
 }
