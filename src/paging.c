@@ -75,10 +75,17 @@ void print_table(void* table) {
 
 	uint16_t* pt = (uint16_t*) table;
 
+	printf("PAGE TABLE: \n");
+	printf("PAGE ID   | FRAME ID  | ERA\n");
 	for(int i = 0; i < PAGETABLE_ROWS; i++){
-		char* pt_row = int_to_bytes(pt[i],12);
-		printf("%d : %s \n", i, pt_row);
-		free(pt_row);
+		if(pt[i]&0b1 == 1){
+			char* pt_row = int_to_bytes(pt[i],12);
+			char* page_id = int_to_bytes(i,9);
+			char* frame_id = int_to_bytes(pt[i]>>3, 9);
+			char* meta = int_to_bytes(pt[i]&0b111,3);
+			printf("%s | %s | %s\n",page_id, frame_id, meta);
+			free(pt_row);
+		}
 	}
 }
 

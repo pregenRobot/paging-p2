@@ -25,26 +25,26 @@ char* int_to_bytes(uint16_t val,int bits){
 }
 
 void* pt_init() {
-	// max 22 bits pid on lab machines - cat /proc/sys/kernel/pid_max
-	uint16_t* pt = malloc(sizeof(uint16_t) * (1<<(MAX_PID_REF + (16 - OFFSET_BITS))));
+	uint32_t* pt = malloc(sizeof(uint32_t) * PAGETABLE_ROWS);
     return pt;
 }
 
-
-int32_t pt_locator(uint16_t page_number){
-	// uint16_t locator = ((uint32_t)(getpid() % (1<<20))) << (9) ; 
-	uint32_t pid = (uint32_t)getpid();
-	uint32_t locator = pid % (1 << 20);
-	locator <<=9;
-	locator += page_number;
-	return locator;
-}
-
 uint16_t virtual_to_physical(void* table, uint16_t virtual_address){
-	uint16_t* pt = (uint16_t*) table;
 
-	uint16_t page_index = virtual_address >> 7;
-	uint16_t frame_index = pt[pt_locator(page_index)] >> 3;
+	uint32_t* pt = (uint32_t*) table;
+	uint32_t page_index = virtual_address >> 7;
+
+	pid_t pid = getpid();
+	int frame_index;
+	for(int i = 0; i < PAGETABLE_ROWS; i++){
+		uint32_t row_pid = pt[i] >> 12;
+		uint32_t row_page_number = (pt[i] & 4095) >> 3; // 0b00000000000000000000111111111111
+		if(page_index == row_page_number && row_pid == pid){
+			frame_index = i;
+			break;
+		}
+	}
+
 	uint16_t offset = virtual_address & OFFSET_MASK;
 	uint16_t physical_address = (frame_index << 7) + offset;
 
@@ -53,40 +53,58 @@ uint16_t virtual_to_physical(void* table, uint16_t virtual_address){
 
 void map_page_to_frame(void* table, uint16_t page_number, uint16_t frame_number, bool readonly, bool executable){
 	// GET PID of current process
-	// 15 bits pid , 9 bits frame number, 2 bits protection, 1 bit allocation status
+	// 20 bits pid , 9 bits frame number, 2 bits protection, 1 bit allocation status
 
-	uint16_t* pt = (uint16_t*)table;
-	uint16_t row = ((uint16_t)frame_number) << (3);
+	uint32_t* pt = (uint32_t*)table;
+	pid_t pid = getpid();
 
-	row+= 0b1; //allocated
+	uint32_t row = ((uint32_t)pid) % (1<<MAX_PID_REF);
+	row = row<<9;
+	row+=page_number;
+	row= row <<3;
 
+	row+=0b1;
 	if(readonly){
-		row+= 0b10;
+		row+=0b10;
 	}
-
 	if(executable){
 		row+=0b100;
 	}
 
-	pt[pt_locator(page_number)] = row;
-	int x = 0;
+	pt[frame_number] = row;
 }
 
 void print_table(void* table){
-	uint16_t* pt = (uint16_t*) table;
 
-	for(int i = 0; i < ((uint32_t)1)<<32; i++){
-		char* pt_row = int_to_bytes(pt[i],12);
-		printf("%d : %s \n", i, pt_row);
-		free(pt_row);
+	uint32_t* pt = (uint32_t*) table;
+	printf("FRAME INDEX      | PID                  | PAGE ID   | ERA\n");
+	for(uint16_t i = 0; i < PAGETABLE_ROWS; i++){
+		if(pt[i]&0b1 == 1){
+			char* pt_row = int_to_bytes(pt[i],32);
+			char* pid = int_to_bytes(pt[i]>>12,20);
+			char* page_id = int_to_bytes((pt[i]&0b00000000000000000000111111111000)>>3,9);
+			char* meta = int_to_bytes(pt[i]&0b111, 3);
+			char* frame_id = int_to_bytes(i,16);
+			// printf("%d, %d, %s \n", i, (uint16_t)pt[i], pt_row);
+			printf("%s | %s | %s | %s\n", frame_id, pid, page_id, meta);
+			free(pt_row);
+		}
 	}
 }
 
 
 void unmap_page(void* table, uint16_t page_number){
-	uint16_t* pt = (uint16_t*) table;
-	uint16_t locator = pt_locator(page_number);
-	pt[locator] -= 1;
+	uint32_t* pt = (uint32_t*) table;
+	pid_t pid = getpid();
+
+	for(int i = 0; i < PAGETABLE_ROWS; i++){
+		uint32_t row_pid = pt[i] << 12;
+		uint32_t row_page_number = (pt[i] & 4095) << 3; // 0b00000000000000000000111111111111
+		if(page_number == row_page_number && row_pid == pid){
+			pt[i]-=1;
+			return;
+		}
+	}
 }
 
 void store_data(void* table, void* store, void* buffer, uint16_t virtual_address, size_t length){

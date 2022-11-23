@@ -16,24 +16,24 @@ int main(){
     void *store = malloc(1<<5);
     void *table = pt_init();
 
-    void* shm_table = create_shared_memory(sizeof(uint16_t) * (1<<(MAX_PID_REF + (16 - OFFSET_BITS))));
+    void* shm_table = create_shared_memory(sizeof(uint32_t) * PAGETABLE_ROWS);
     void* shm_store = create_shared_memory(1<<5);
 
-    memcpy(shm_table, table, sizeof(uint16_t) * (1<<(MAX_PID_REF + (16 - OFFSET_BITS))));
+    memcpy(shm_table, table, sizeof(uint32_t) * PAGETABLE_ROWS);
     memcpy(shm_store, store, 1<<5);
-
+    
     for(int i = 0; i < 3; i++){
         pid_t pid = fork();
 
         if(pid == 0){// child
-            map_page_to_frame(shm_table, 0, 3*i + 4, false, false);
-            map_page_to_frame(shm_table, 0, 3*i + 4, false, false);
-            map_page_to_frame(shm_table, 0, 3*i + 0, false, false);
-            map_page_to_frame(shm_table, 0, 3*i + 2, false, false);
-            map_page_to_frame(shm_table, 0, 3*i + 1, false, false);
+            map_page_to_frame(shm_table, 0, 5*i + 4, false, false);
+            map_page_to_frame(shm_table, 1, 5*i + 3, false, false);
+            map_page_to_frame(shm_table, 2, 5*i + 0, false, false);
+            map_page_to_frame(shm_table, 3, 5*i + 2, false, false);
+            map_page_to_frame(shm_table, 4, 5*i + 1, false, false);
 
-            char text[128];
-            sprintf(text, "This is a message from child %d with pid %d", i , (int)getpid());
+            char text[640];
+            sprintf(text, "THIS IS A MESSAGE FROM CHILD #%d WITH PID %d. Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source.", i , (int)getpid());
             size_t length = strlen(text);
             store_data(shm_table, shm_store, text, 0, length);
             sleep (5); // wait for all the children to finish writing;
@@ -48,6 +48,8 @@ int main(){
 
     // Wait for children to finish
     sleep(10);
-    int x = 0;
+
+    printf("PAGE TABLE AFTER all allocation: \n");
+    print_table(shm_table);
 
 }

@@ -45,6 +45,8 @@ int main() {
 	read_data(table, store, buffer, 0, length);
 	printf("%s\n", buffer);
 
+	print_table(table);
+
 	free(buffer);
 
 	// Cleanup
