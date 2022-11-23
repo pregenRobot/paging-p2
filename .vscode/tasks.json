@@ -8,7 +8,7 @@
             "type": "cppbuild",
             "command": "gcc",
             "args":[
-                "-std=c99",
+                "-std=gnu99",
                 "-g",
                 "-o",
                 "test",
@@ -30,7 +30,7 @@
             "type": "cppbuild",
             "command": "gcc",
             "args":[
-                "-std=c99",
+                "-std=gnu99",
                 "-g",
                 "-o",
                 "test_inverted",

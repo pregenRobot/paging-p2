@@ -6,7 +6,7 @@
 
 // Your implementation goes in here!
 
-char* int_to_bytes(uint32_t val,int bits){
+char* int_to_bytes(uint16_t val,int bits){
 	char* buff = malloc(bits + 1);
 
 	for(int i = bits - 1; i >=0;i--) {
@@ -26,13 +26,16 @@ char* int_to_bytes(uint32_t val,int bits){
 
 void* pt_init() {
 	// max 22 bits pid on lab machines - cat /proc/sys/kernel/pid_max
-    uint16_t* pt = malloc(((uint32_t)PAGETABLE_ROWS) * MAX_PID * sizeof(uint16_t));
+	uint16_t* pt = malloc(sizeof(uint16_t) * (1<<(MAX_PID_REF + (16 - OFFSET_BITS))));
     return pt;
 }
 
 
 int32_t pt_locator(uint16_t page_number){
-	uint32_t locator = ((uint32_t)(getpid() % (1<<MAX_PID))) << (9) ; 
+	// uint16_t locator = ((uint32_t)(getpid() % (1<<20))) << (9) ; 
+	uint32_t pid = (uint32_t)getpid();
+	uint32_t locator = pid % (1 << 20);
+	locator <<=9;
 	locator += page_number;
 	return locator;
 }
@@ -53,7 +56,7 @@ void map_page_to_frame(void* table, uint16_t page_number, uint16_t frame_number,
 	// 15 bits pid , 9 bits frame number, 2 bits protection, 1 bit allocation status
 
 	uint16_t* pt = (uint16_t*)table;
-	uint16_t row = frame_number << (3);
+	uint16_t row = ((uint16_t)frame_number) << (3);
 
 	row+= 0b1; //allocated
 
@@ -66,12 +69,13 @@ void map_page_to_frame(void* table, uint16_t page_number, uint16_t frame_number,
 	}
 
 	pt[pt_locator(page_number)] = row;
+	int x = 0;
 }
 
 void print_table(void* table){
 	uint16_t* pt = (uint16_t*) table;
 
-	for(int i = 0; i < ((uint32_t)PAGETABLE_ROWS) * MAX_PID; i++){
+	for(int i = 0; i < ((uint32_t)1)<<32; i++){
 		char* pt_row = int_to_bytes(pt[i],12);
 		printf("%d : %s \n", i, pt_row);
 		free(pt_row);
@@ -81,7 +85,7 @@ void print_table(void* table){
 
 void unmap_page(void* table, uint16_t page_number){
 	uint16_t* pt = (uint16_t*) table;
-	uint32_t locator = pt_locator(page_number);
+	uint16_t locator = pt_locator(page_number);
 	pt[locator] -= 1;
 }
 

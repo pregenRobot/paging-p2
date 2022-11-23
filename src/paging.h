@@ -12,7 +12,7 @@
 #define PAGETABLE_ROWS	1<<(16-OFFSET_BITS)
 #define PAGETABLE_SIZE	(16 - OFFSET_BITS) +3
 #define FRAME_BITS 	1<<OFFSET_BITS
-#define MAX_PID 20
+#define MAX_PID_REF 20
 
 /**
  * Initialise the page table. This should allocate the memory for the page table and return the pointer.
