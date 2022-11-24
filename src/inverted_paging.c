@@ -96,13 +96,55 @@ void unmap_page(void* table, uint16_t page_number){
 	pid_t pid = getpid();
 
 	for(int i = 0; i < PAGETABLE_ROWS; i++){
-		uint32_t row_pid = pt[i] << 12;
-		uint32_t row_page_number = (pt[i] & 4095) << 3; // 0b00000000000000000000111111111111
+		uint32_t row_pid = pt[i] >> 12;
+		uint32_t row_page_number = (pt[i] & 4095) >> 3; // 0b00000000000000000000111111111111
 		if(page_number == row_page_number && row_pid == pid){
 			pt[i]-=1;
 			return;
 		}
 	}
+}
+
+bool virtual_address_is_mapped(void* table, uint16_t virtual_address){
+	uint32_t* pt = (uint32_t*) table;
+
+	pid_t pid = getpid();
+	uint16_t page_number = virtual_address >> 7;
+
+	for(int i = 0; i < PAGETABLE_ROWS; i++){
+		uint32_t row_pid = pt[i] >>  12;
+		uint32_t row_page_number = (pt[i] & 4095) >> 3;
+		if(page_number == row_page_number && row_pid == pid){
+			uint16_t allocation_status = pt[i] & 0b1;
+			if(allocation_status == 1){
+				return true;
+			}else{
+				return false;
+			}
+		}
+	}
+	return false;
+}
+
+bool virtual_address_is_writeable(void* table, uint16_t virtual_address){
+	uint32_t* pt = (uint32_t*) table;
+	uint16_t page_number = virtual_address >> 7;
+
+	pid_t pid = getpid();
+	
+	for(int i = 0; i < PAGETABLE_ROWS; i++){
+		uint32_t row_pid = pt[i] >> 12;
+		uint32_t row_page_number = (pt[i] & 4095) >> 3;
+		if(page_number == row_page_number && row_pid == pid){
+			uint16_t write_status = pt[i] & 0b10;
+			if(write_status != 0b10){
+				return true;
+			}else{
+				return false;
+			}
+		}
+	}
+	return false;
 }
 
 void store_data(void* table, void* store, void* buffer, uint16_t virtual_address, size_t length){
@@ -112,13 +154,20 @@ void store_data(void* table, void* store, void* buffer, uint16_t virtual_address
 	int i = 0;
 	int page;
 	int offset;
+	int write_index = 0;
 	for(i = 0; i < length; i++){
 		offset = i % 128;
 		page = i / 128;
-		uint16_t physical_address = virtual_to_physical(table, i);
-		memcpy(&memory[physical_address],&data[i],1);
+		if(virtual_address_is_mapped(table, i)){
+			if(virtual_address_is_writeable(table, i)){
+				uint16_t physical_address = virtual_to_physical(table,i);
+				memcpy(&memory[physical_address], &data[write_index],1);
+				write_index+=1;
+			}
+		}
 	}
 }
+
 
 void read_data(void* table, void* store, void* buffer, uint16_t virtual_address, size_t length){
 	
@@ -128,12 +177,15 @@ void read_data(void* table, void* store, void* buffer, uint16_t virtual_address,
 	int i = 0;
 	int page;
 	int offset;
-
+	int write_index = 0;
 	for(i = 0; i < length; i++){
 		offset = i % 128;
 		page = i / 128;
 
-		uint16_t physical_address = virtual_to_physical(table, i);
-		memcpy(&data[i], &memory[physical_address],1);
+		if(virtual_address_is_mapped(table, i)){
+			uint16_t physical_address = virtual_to_physical(table, i);
+			memcpy(&data[write_index],&memory[physical_address],1);
+			write_index+=1;
+		}
 	}
 }
