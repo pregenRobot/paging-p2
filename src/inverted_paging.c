@@ -52,9 +52,7 @@ uint16_t virtual_to_physical(void* table, uint16_t virtual_address){
 }
 
 void map_page_to_frame(void* table, uint16_t page_number, uint16_t frame_number, bool readonly, bool executable){
-	// GET PID of current process
 	// 20 bits pid , 9 bits frame number, 2 bits protection, 1 bit allocation status
-
 	uint32_t* pt = (uint32_t*)table;
 	pid_t pid = getpid();
 
